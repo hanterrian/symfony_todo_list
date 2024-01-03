@@ -7,7 +7,6 @@ use App\Repository\AccessTokenRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: AccessTokenRepository::class)]
-#[ApiResource]
 class AccessToken
 {
     #[ORM\Id]

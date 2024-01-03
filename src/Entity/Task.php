@@ -2,24 +2,41 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 use App\Repository\TaskRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: TaskRepository::class)]
 #[ORM\Index(name: 'inx_title', fields: ['title'])]
 #[ORM\Index(name: 'inx_description', fields: ['description'])]
 #[ORM\Index(name: 'inx_status', fields: ['status'])]
 #[ORM\Index(name: 'inx_completedAt', fields: ['completedAt'])]
-#[ApiResource]
+#[ApiResource(
+    operations: [
+        new Get(normalizationContext: ['groups' => 'task:item']),
+        new GetCollection(normalizationContext: ['groups' => 'task:list']),
+    ],
+    order: ['createdAt' => 'DESC'],
+    paginationEnabled: false
+)]
+#[ApiFilter(SearchFilter::class, properties: ['conference' => 'exact'])]
 class Task
 {
+    use TimestampableEntity;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['task:list', 'task:item'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'tasks')]
@@ -30,18 +47,23 @@ class Task
     private ?self $parent = null;
 
     #[ORM\OneToMany(mappedBy: 'parent', targetEntity: self::class)]
+    #[Groups(['task:item'])]
     private Collection $children;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['task:list', 'task:item'])]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(['task:list', 'task:item'])]
     private ?string $description = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['task:list', 'task:item'])]
     private ?string $status = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['task:list', 'task:item'])]
     private ?\DateTimeImmutable $completedAt = null;
 
     public function __construct()
